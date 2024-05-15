@@ -1,5 +1,5 @@
 import React from 'react'
 
-export default function PageWallet() {
+export default function wallet() {
 	return <div>wallet page</div>
 }
