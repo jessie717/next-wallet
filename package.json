@@ -19,6 +19,8 @@
 		"wagmi": "^2.8.8"
 	},
 	"devDependencies": {
+		"@iconify/json": "^2.2.216",
+		"@iconify/tailwind": "^1.1.1",
 		"@types/node": "^20",
 		"@types/react": "^18",
 		"@types/react-dom": "^18",
