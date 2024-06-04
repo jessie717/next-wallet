@@ -1,4 +1,6 @@
-import Link from 'next/link'
+// import Link from 'next/link'
+import Chain from '@/components/chain'
+import Wallet from '@/components/wallet'
 
 export default function Home() {
 	return (
@@ -8,10 +10,8 @@ export default function Home() {
 					<div className="w-4/5 h-full m-auto flex justify-between items-center">
 						<div>Next.js wallet</div>
 						<div className="flex justify-end items-center gap-1">
-							<div className="px-4 py-1 hover:bg-red-300 hover:rounded  hover:cursor-pointer hover:shadow ">Chain</div>
-							<div className="px-4 py-1 hover:bg-red-300 hover:rounded  hover:cursor-pointer hover:shadow ">
-								Connect wallet
-							</div>
+							<Chain />
+							<Wallet />
 						</div>
 					</div>
 				</div>
