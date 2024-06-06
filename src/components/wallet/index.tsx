@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Arrow from '../arrow'
-import { BrowserProvider, ethers } from 'ethers'
+import { BrowserProvider } from 'ethers'
 import { NEXT_WALLET_TOKEN } from '@/config'
 
 // signer
@@ -13,38 +13,81 @@ import { NEXT_WALLET_TOKEN } from '@/config'
 // 6、getSigner、listAccounts 是BrowserProvider专有的，getSigner上面说过了。
 
 export default function Wallet() {
+	const [account, setAccount] = useState<string | null>(null)
+	const [balance, setBalance] = useState<bigint | null>(null)
+
+	const [provider, setProvider] = useState<BrowserProvider | null>(null)
+
 	const [visible, setVisible] = useState(false)
 
-	const [account, setAccount] = useState<string>()
-
-	const requestAccounts = async (): Promise<string[]> => {
-		return await window.ethereum.request({ method: 'eth_requestAccounts' })
-	}
-
 	useEffect(() => {
-		// if (window.ethereum) {
-		// 	window.ethereum.request({ method: 'eth_requestAccounts' }).then((accounts: string[]) => {
-		// 		console.log('accounts :>> ', accounts)
-		// 		accounts.length >= 1 && setAccount(accounts[0])
-		// 	})
-		// }
-		const account = sessionStorage.getItem(NEXT_WALLET_TOKEN)
-		account && setAccount(account)
+		if (typeof window.ethereum !== 'undefined') {
+			const provider = new BrowserProvider(window.ethereum)
+			setProvider(provider)
+
+			// 刷新后走storage读取
+			const storedAccount = sessionStorage.getItem(NEXT_WALLET_TOKEN)
+			if (storedAccount) {
+				setAccount(storedAccount)
+				getBalance(provider, storedAccount)
+			}
+
+			// 监听ethereum的几个事件
+			window.ethereum.on('accountsChanged', onAccountsChanged)
+			window.ethereum.on('connect', onConnect)
+			window.ethereum.on('disconnect', onDisconnect)
+		}
+		return () => {
+			if (window.ethereum) {
+				window.ethereum.removeListener('accountsChanged', onAccountsChanged)
+				window.ethereum.removeListener('connect', onConnect)
+				window.ethereum.removeListener('disconnect', onDisconnect)
+			}
+		}
 	}, [])
 
+	const onAccountsChanged = (accounts: string[]) => {
+		if (accounts.length > 0) {
+			const [account] = accounts
+			setAccount(account)
+			getBalance(provider, account)
+			sessionStorage.setItem(NEXT_WALLET_TOKEN, account)
+		} else {
+			setAccount(null)
+			setBalance(null)
+			sessionStorage.removeItem(NEXT_WALLET_TOKEN)
+		}
+	}
+	const onConnect = (info: any) => {
+		console.log('info :>> ', info)
+	}
+	const onDisconnect = () => {
+		console.log('disconnect :>> ')
+	}
+
 	const connectWallet = async () => {
-		if (window.ethereum) {
-			const provider = new BrowserProvider(window.ethereum)
-			const accounts = (await provider.send('eth_requestAccounts', [])) as string[]
-			console.log('accounts :>> ', accounts)
-			if (accounts.length > 0) {
-				const [address] = accounts
-				setAccount(address)
-				sessionStorage.setItem(NEXT_WALLET_TOKEN, address)
+		if (provider) {
+			try {
+				await provider.send('eth_requestAccounts', [])
+				// signer.address
+				// signer.getAddress()
+				// 初始化
+				const signer = await provider.getSigner()
+				const account = await signer.getAddress()
+				setAccount(account)
+				getBalance(provider, account)
+				sessionStorage.setItem(NEXT_WALLET_TOKEN, account)
+			} catch (error) {
+				console.error('error :>> ', error)
 			}
-			// const signer = await provider.getSigner()
-			// console.log('signer :>> ', signer)
-			// const address = signer.address
+		}
+	}
+
+	const getBalance = async (provider: BrowserProvider | null, account: string) => {
+		if (provider) {
+			const balance = await provider.getBalance(account)
+			console.log('balance :>> ', balance)
+			setBalance(balance)
 		}
 	}
 
@@ -55,13 +98,23 @@ export default function Wallet() {
 	return (
 		<>
 			{account ? (
-				<div
-					className="flex items-center gap-1 px-4 py-1 w-32 hover:w-[420px] transition-width duration-300 hover:bg-blue-700 hover:rounded  hover:cursor-pointer hover:shadow"
-					onClick={() => showWallet()}
-				>
-					<span className="icon-[system-uicons--wallet]" />
-					<div className="text-sm truncate">{account}</div>
-					<Arrow visible={visible} />
+				<div className="relative">
+					<div
+						className="flex items-center gap-1 px-4 py-1 w-32 hover:w-[420px] transition-width duration-300 hover:bg-blue-700 hover:rounded  hover:cursor-pointer hover:shadow"
+						onClick={() => showWallet()}
+					>
+						<span className="icon-[system-uicons--wallet]" />
+						<div className="text-sm truncate">{account}</div>
+						<Arrow visible={visible} />
+					</div>
+
+					<div className="absolute right-0 top-11 w-80 p-4 rounded shadow-2xl text-sm text-zinc-800">
+						<div className="flex flex-col justify-center gap-2 p-2 bg-slate-100">
+							<div className="">Connected with Metamask</div>
+							<div className="w-40 truncate">{account}</div>
+							<div>ETH: {balance}</div>
+						</div>
+					</div>
 				</div>
 			) : (
 				<div
