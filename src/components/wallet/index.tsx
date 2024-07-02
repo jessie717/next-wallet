@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Arrow from '../arrow'
 import { BrowserProvider } from 'ethers'
 import { NEXT_WALLET_TOKEN } from '@/config'
+import { formatEther } from 'ethers/utils'
 
 // signer
 // 1、getBalance 可以获取某个账号的链代币余额
@@ -14,7 +15,7 @@ import { NEXT_WALLET_TOKEN } from '@/config'
 
 export default function Wallet() {
 	const [account, setAccount] = useState<string | null>(null)
-	const [balance, setBalance] = useState<bigint | null>(null)
+	const [balance, setBalance] = useState<string | null>(null)
 
 	const [provider, setProvider] = useState<BrowserProvider | null>(null)
 
@@ -75,7 +76,8 @@ export default function Wallet() {
 				const signer = await provider.getSigner()
 				const account = await signer.getAddress()
 				setAccount(account)
-				getBalance(provider, account)
+				const balance = await getBalance(provider, account)
+				setBalance(formatEther(balance))
 				sessionStorage.setItem(NEXT_WALLET_TOKEN, account)
 			} catch (error) {
 				console.error('error :>> ', error)
@@ -86,12 +88,18 @@ export default function Wallet() {
 	const getBalance = async (provider: BrowserProvider | null, account: string) => {
 		if (provider) {
 			const balance = await provider.getBalance(account)
-			console.log('balance :>> ', balance)
-			setBalance(balance)
+			return balance
 		}
+		return null
 	}
 
-	const showWallet = () => {
+	const showWallet = async () => {
+		console.log('object :>> ', visible)
+		const signer = await (provider as BrowserProvider).getSigner()
+		const address = await signer.getAddress()
+		const balance = await getBalance(provider, address)
+		console.log('balance :>> ', balance)
+		setBalance(balance)
 		setVisible(!visible)
 	}
 
@@ -108,13 +116,15 @@ export default function Wallet() {
 						<Arrow visible={visible} />
 					</div>
 
-					<div className="absolute right-0 top-11 w-80 p-4 rounded shadow-2xl text-sm text-zinc-800">
-						<div className="flex flex-col justify-center gap-2 p-2 bg-slate-100">
-							<div className="">Connected with Metamask</div>
-							<div className="w-40 truncate">{account}</div>
-							<div>ETH: {balance}</div>
+					{!visible && (
+						<div className="absolute right-0 top-11 w-80 p-4 rounded shadow-2xl text-sm text-zinc-800">
+							<div className="flex flex-col justify-center gap-2 p-2 bg-slate-100">
+								<div className="">Connected with Metamask</div>
+								<div className="w-40 truncate">{account}</div>
+								<div>ETH: {balance}</div>
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 			) : (
 				<div
