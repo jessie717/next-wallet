@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { TransactionResponse } from 'ethers/providers'
+import { BrowserProvider, TransactionResponse } from 'ethers/providers'
 
 import { API_KEY, NEXT_WALLET_TOKEN, SEPOLIA_BASE_URL } from '@/config'
 import Loading from '@/components/loading'
@@ -10,6 +10,13 @@ export default function Transactions() {
 	const [loading, setLoading] = useState(false)
 	const [transactions, setTransactions] = useState<TransactionResponse[]>([])
 	const [wallet, setWallet] = useState<string>('')
+
+	const sendTransaction = () => {
+		if (typeof window.ethereum !== 'undefined') {
+			const provider = new BrowserProvider(window.ethereum)
+			// const signer = await provider.getSigner()
+		}
+	}
 
 	const getTransactions = async () => {
 		setLoading(true)
