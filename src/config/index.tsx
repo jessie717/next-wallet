@@ -42,3 +42,5 @@ export const NEXT_WALLET_TOKEN = 'NEXT_WALLET_TOKEN'
 
 // eth 测试链接
 export const SEPOLIA_BASE_URL = 'https://api-sepolia.etherscan.io/api'
+// Etherscan key
+export const API_KEY = ''
