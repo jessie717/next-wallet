@@ -26,11 +26,15 @@ export default function Wallet() {
 			const provider = new BrowserProvider(window.ethereum)
 			setProvider(provider)
 
+			const setStoredBalance = async (storedAccount: string) => {
+				const balance = await getBalance(provider, storedAccount)
+				setBalance(formatEther(balance as bigint))
+			}
 			// 刷新后走storage读取
 			const storedAccount = sessionStorage.getItem(NEXT_WALLET_TOKEN)
 			if (storedAccount) {
 				setAccount(storedAccount)
-				getBalance(provider, storedAccount)
+				setStoredBalance(storedAccount)
 			}
 
 			// 监听ethereum的几个事件
@@ -47,11 +51,16 @@ export default function Wallet() {
 		}
 	}, [])
 
-	const onAccountsChanged = (accounts: string[]) => {
+	// TODO: account changed
+	const onAccountsChanged = async (accounts: string[]) => {
 		if (accounts.length > 0) {
 			const [account] = accounts
 			setAccount(account)
-			getBalance(provider, account)
+			if (provider) {
+				const balance = await getBalance(provider, account)
+				console.log('changed balance :>> ', account, balance)
+				setBalance(formatEther(balance as bigint))
+			}
 			sessionStorage.setItem(NEXT_WALLET_TOKEN, account)
 		} else {
 			setAccount(null)
@@ -77,7 +86,7 @@ export default function Wallet() {
 				const account = await signer.getAddress()
 				setAccount(account)
 				const balance = await getBalance(provider, account)
-				setBalance(formatEther(balance))
+				setBalance(formatEther(balance as bigint))
 				sessionStorage.setItem(NEXT_WALLET_TOKEN, account)
 			} catch (error) {
 				console.error('error :>> ', error)
@@ -85,21 +94,20 @@ export default function Wallet() {
 		}
 	}
 
-	const getBalance = async (provider: BrowserProvider | null, account: string) => {
+	const getBalance = async (provider: BrowserProvider | null, address: string) => {
 		if (provider) {
-			const balance = await provider.getBalance(account)
+			const balance = await provider.getBalance(address)
 			return balance
 		}
 		return null
 	}
 
 	const showWallet = async () => {
-		console.log('object :>> ', visible)
-		const signer = await (provider as BrowserProvider).getSigner()
-		const address = await signer.getAddress()
-		const balance = await getBalance(provider, address)
-		console.log('balance :>> ', balance)
-		setBalance(balance)
+		// const signer = await (provider as BrowserProvider).getSigner()
+		// const address = await signer.getAddress()
+		// const balance = await getBalance(provider, address)
+		// console.log('balance :>> ', balance)
+		// setBalance(formatEther(balance as bigint))
 		setVisible(!visible)
 	}
 
@@ -116,12 +124,12 @@ export default function Wallet() {
 						<Arrow visible={visible} />
 					</div>
 
-					{!visible && (
+					{visible && (
 						<div className="absolute right-0 top-11 w-80 p-4 rounded shadow-2xl text-sm text-zinc-800">
 							<div className="flex flex-col justify-center gap-2 p-2 bg-slate-100">
 								<div className="">Connected with Metamask</div>
 								<div className="w-40 truncate">{account}</div>
-								<div>ETH: {balance}</div>
+								<div>ETH: {balance || 0}</div>
 							</div>
 						</div>
 					)}
