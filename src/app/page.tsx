@@ -1,6 +1,7 @@
 // import Link from 'next/link'
 import Chain from '@/components/chain'
 import Wallet from '@/components/wallet'
+import Transactions from '@/components/transactions'
 
 export default function Home() {
 	return (
@@ -15,6 +16,7 @@ export default function Home() {
 						</div>
 					</div>
 				</div>
+				<Transactions />
 				{/* <Link href='/wallet'>
 					<span className='underline hover:text-orange-500'>wallet</span>
 				</Link>
