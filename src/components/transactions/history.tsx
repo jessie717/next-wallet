@@ -25,6 +25,10 @@ export default function History({
 								<div className="text-sm text-ellipsis">{tx.hash}</div>
 							</div>
 							<div className="flex items-center">
+								<div className="font-bold w-14">Time:</div>
+								<div className="text-sm text-ellipsis">{tx.timeStamp}</div>
+							</div>
+							<div className="flex items-center">
 								<div className="font-bold w-14">From:</div>
 								<div className="text-sm text-ellipsis">{tx.from}</div>
 							</div>
